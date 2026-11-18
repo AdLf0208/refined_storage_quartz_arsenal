@@ -1,65 +1,63 @@
-# Refined Storage - Quartz Arsenal for Horizon
+# Refined Storage - Quartz Arsenal — a Horizon port
 
-A Horizon port of **Refined Storage - Quartz Arsenal 1.0.8**
-(`refinedmods/refinedstorage-quartz-arsenal`, MIT) for Minecraft 26.3.
+**Refined Storage - Quartz Arsenal** is a Minecraft mod. Quartz Arsenal is an addon for Refined Storage that adds various new tools. This repository is a **port of it to [Horizon](https://github.com/horizon-rust/horizon)**, the Rust engine for Minecraft Java 26.3. It carries the complete source of the port plus the content files it ships, and installs as a single `.hmod` package.
 
-Despite the name, the addon contains **no tool, weapon or block**: its whole content is
-two items — `refinedstorage_quartz_arsenal:wireless_crafting_grid` and
-`refinedstorage_quartz_arsenal:creative_wireless_crafting_grid` — with four item models,
-two textures, eighteen locales and one shaped recipe. That is what this port carries, and
-nothing is invented around the name.
+Upstream: [refinedmods/refinedstorage-quartz-arsenal](https://github.com/refinedmods/refinedstorage-quartz-arsenal) — licence **MIT**.
 
-**Format: the SDK package (Horizon mod API 0.2).** One flat
-`refinedstorage_quartz_arsenal.hmod` holds `horizon-mod.toml`, `Cargo.toml`,
-`src/lib.rs` (the one `impl mod_api::Hooks` — no hook, because this slice is a content
-carry), `src/runtime.rs` (the campaign's pure census, byte-identical to the retired
-`.hnmod` port, 10 tests) and the content in `assets/` + `data/`. See
-[notes.md § "Migration to the SDK format"](notes.md) for the file map, the census, the
-gaps and the traps.
+| | |
+|---|---|
+| Upstream mod | Refined Storage - Quartz Arsenal ([source](https://github.com/refinedmods/refinedstorage-quartz-arsenal)) |
+| Ported to | Horizon 0b14f8a, Minecraft Java 26.3, mod API `0.2` |
+| Package | `refinedstorage_quartz_arsenal.hmod` (install it with the Horizon launcher) |
+| Licence | **MIT** — the upstream mod's licence; see [Licence and credit](#licence-and-credit) |
 
-## What a player gets, and what they do not
+## What this port implements
 
-Both grids register, give with `/give`, draw their carried models and occupy one slot each
-(`max_stack_size: 1`, because the item holds per-stack state upstream). **Right-clicking one
-does not open a crafting grid**: that needs a crafting surface bound to a Refined Storage
-network, and the parent port (`refinedstorage`) has no crafting half yet. The
-active/inactive model switch, the item's FE buffer, the network binding, the key bind, the
-config knobs and a creative tab are all open; see `notes.md` for the full gap list.
+- **Opening the grid is not possible yet.** Upstream's item opens a 3×3
+- **The active/inactive model switch is pending upstream.** The 26.x model
+- **The item's energy buffer** (`item_energy_buffer`, API 307 — stamped) belongs
 
-## Build and test
+## Not yet ported
 
-No staging step and no mixin plan: the crate is compiled in place against the SDK the build
-fetches into `.horizon/sdk/` (gitignored).
+- **The recipe cannot match.** It names `#c:ender_pearls` and
+- **The parent ingredients do not exist here yet**: `refinedstorage:quartz_enriched_iron`
+- **No behaviour**: right-click, the crafting menu, the FE buffer
+- **No creative tab.** Upstream's `CreativeModeTabItems` adds the items to a tab
+- **Stack size 1 is an inference, pinned in-game.** The jar's data does not set
+- **Lang is carried, not rendered.** All 18 files hold the two item keys and
+- **The `text.autoconfig.*` lang keys are inert** (no config screen).
+- **No texture/model animation or tint** beyond the two carried PNGs.
 
-```sh
-CARGO_INCREMENTAL=0 cargo test --offline                 # the census + the package test
-CARGO_INCREMENTAL=0 cargo clippy --all-targets -- -D warnings
-cargo fmt --check                                        # not --all: that checks the SDK
-rm -f Cargo.lock                                         # a packed lock changes the artifact
-CARGO_INCREMENTAL=0 cargo horizon-mod build              # -> target/horizon-mod/<id>.hmod
-cp target/horizon-mod/refinedstorage_quartz_arsenal.hmod ./refinedstorage_quartz_arsenal.hmod
-cargo horizon-mod check refinedstorage_quartz_arsenal.hmod
-cargo horizon-mod fits refinedstorage_quartz_arsenal.hmod --build nightly
-python3 tools/check_content.py                           # the carried tree's cross-reference check
-sha256sum refinedstorage_quartz_arsenal.hmod
+## Installing
+
+1. Install the [Horizon launcher](https://github.com/horizon-rust/horizon/releases) (0.2.70 or newer).
+2. Add `refinedstorage_quartz_arsenal.hmod` to the instance's mods.
+3. The package is pinned to a specific Horizon build; the launcher checks that pin.
+
+## Licence and credit
+
+Refined Storage - Quartz Arsenal was created by its upstream authors; the code, models and assets in the original mod
+remain theirs and are used here under **MIT**. The Rust in this repository is a clean-room
+rewrite for Horizon, not a translation of the original source.
+
+- `LICENSE` — the upstream licence text.
+- `LICENSE-NOTICE.md` — what this port carries and where it came from.
+- The upstream project: https://github.com/refinedmods/refinedstorage-quartz-arsenal
+
+## Technical details
+
+```
+horizon-mod.toml   package manifest (id, version, api, [native] pin)
+Cargo.toml         the crate; depends on `horizon-mod-api` from the fetched SDK
+src/               lib.rs (the one `impl Hooks`), runtime.rs (pure logic + tests), glue
+assets/ data/      the content the package ships
+tools/             content generators and the e2e scenario
 ```
 
-Every build/test step runs inside a campaign build slot
-(`../../ports/tools/build-slot.sh run --job … --port ports/refinedstorage_quartz_arsenal
---step … -- bash -c 'cd ports/refinedstorage_quartz_arsenal && …'`).
+- Build: `cargo horizon-mod build` (packages; it does not compile against the game).
+- Test: `cargo test`, `cargo clippy --all-targets -- -D warnings`.
+- In-game: `ports/tools/launcher-game.sh run refinedstorage_quartz_arsenal` in the campaign tree, or install the
+  `.hmod` and play; the harness scenario is `tools/e2e.sh`.
 
-## In-game check
-
-`tools/e2e.sh` is the scenario: both ids give, `/give 2` lands as two stacks of one, a
-plausible absent sibling id is refused while a vanilla stick still gives, and a
-counterfactual run without the mod proves the differential. It needs a game the launcher
-built with this package:
-
-```sh
-horizon-launcher native-build ports/refinedstorage_quartz_arsenal --instance <i> --trust-native-code
-GAME=<that game>/horizon-client CTL=<that game>/horizon-ctl tools/e2e.sh
-```
-
-`horizon-launcher` is **not installed** in the campaign environment at this pin, so the
-0.2.0 package has **not** been run in a game; the 0.1.0 runs are kept as history
-(`../_shared/evidence/refinedstorage_quartz_arsenal/`).
+This repository is generated from the campaign's port at `ports/refinedstorage_quartz_arsenal/`; the port's own
+`notes.md` is the full record (decisions, traps, evidence).
