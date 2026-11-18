@@ -1,0 +1,29 @@
+# Carried from refinedstorage-quartz-arsenal-neoforge-1.0.8.jar (MIT) for local use only.
+# Provenance, hashes and the licence string: LICENSE-NOTICE.md and
+# ports/_shared/carry-work/refinedstorage_quartz_arsenal/SOURCE.md
+id = "refinedstorage_quartz_arsenal"
+name = "Refined Storage - Quartz Arsenal"
+version = "0.2.0"
+description = """A port of Refined Storage - Quartz Arsenal for Horizon: the addon's contents are two
+items, a wireless crafting grid and its creative variant, carried with their four item models, two
+textures, eighteen locales and one shaped recipe. The jar adds no tool, weapon or block. Opening a grid
+needs a crafting surface bound to a Refined Storage network, which the parent port does not have yet,
+so this package is the content and nothing else: the active/inactive model switch, the item's energy
+buffer, the network-bound behaviour and a creative tab are recorded gaps."""
+authors = ["Refined Mods", "AdLf0208"]
+# A native package: the campaign's pure census in src/runtime.rs (byte-identical to the
+# retired `.hnmod`) is compiled beside the content in assets/ and data/. The id is the
+# resource namespace and the only identity: Cargo's package name and version are not the
+# mod's.
+api = "0.2"
+# The installation side: the items are data both halves read, and single player's
+# integrated server belongs to the client installation.
+side = "both"
+# The one shared value every manifest carries ("May add blocks, items, mob effects and
+# entity types"): this mod declares the two items in data/refinedstorage_quartz_arsenal.
+capabilities = ["registries"]
+
+[native]
+game = "26.3"
+horizon = "0b14f8acfd97fa2c750e42795249dcc981178ca4"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
